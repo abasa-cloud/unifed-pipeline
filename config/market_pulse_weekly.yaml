@@ -1,13 +1,40 @@
 pipeline_id: market_pulse_weekly
+description: Weekly market pulse extract per client
+
 trigger:
   type: cron
   schedule: "0 5 ? * TUE *"
+
+execution:
+  window:
+    type: weekly
+    lookback_days: 7
+  backfill_supported: true
+  max_parallelism: 10
+
 source:
   engine: athena
-transform:
-  type: sql
+  database: trovo_coop
+  tables:
+    - trovo_coop_v2_market_pulse_data_view
+    - 5x5_universal_person
+    - join_up_2_maid
+
+steps:
+  - name: extract
+    type: glue
+  - name: quality_check
+    type: dq
+  - name: transform
+    type: sql
+  - name: deliver
+    type: s3
+
 delivery:
   format: csv
+  destination: s3://trovo-coop-data-copy/weekly/market_pulse/
+  partition_by: client_id
+
 governance:
   pii: true
   data_owner: marketing
