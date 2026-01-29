@@ -1,0 +1,14 @@
+pipeline_id: market_pulse_weekly
+trigger:
+  type: cron
+  schedule: "0 5 ? * TUE *"
+source:
+  engine: athena
+transform:
+  type: sql
+delivery:
+  format: csv
+governance:
+  pii: true
+  data_owner: marketing
+  sla_hours: 6
