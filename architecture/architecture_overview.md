@@ -1,5 +1,11 @@
 # Architecture Overview
 
-All pipelines are declaratively defined via configuration files and executed using shared AWS infrastructure.
+This system unifies multiple existing data pipelines under a single orchestration and governance model.
 
-The system supports scheduled and event-driven pipelines through a single orchestration model.
+All pipelines are defined declaratively using configuration files and executed using shared AWS infrastructure. Both scheduled and event-driven pipelines follow the same lifecycle, reducing cognitive and operational overhead.
+
+Key benefits:
+- Consistent behavior across pipelines
+- Reduced Glue job sprawl
+- Clear lineage, ownership, and freshness guarantees
+- Incremental migration from the current state
