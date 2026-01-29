@@ -1,12 +1,39 @@
 pipeline_id: string
+description: string
+
 trigger:
-  type: cron | s3_event
+  type: cron | s3_event | manual
+  schedule: string
+  bucket: string
+
+execution:
+  window:
+    type: daily | weekly | event
+    lookback_days: number
+  backfill_supported: boolean
+  max_parallelism: number
+
 source:
   engine: athena | s3
-transform:
-  type: sql | dbt
+  database: string
+  tables:
+    - string
+
+steps:
+  - name: extract
+    type: glue
+  - name: quality_check
+    type: dq
+  - name: transform
+    type: sql | dbt
+  - name: deliver
+    type: s3
+
 delivery:
   format: csv | parquet | excel
+  destination: string
+  partition_by: string
+
 governance:
   pii: boolean
   data_owner: string
