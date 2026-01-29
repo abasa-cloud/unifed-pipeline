@@ -1,12 +1,36 @@
 pipeline_id: vins_automotive
+description: Event-driven VIN matching pipeline
+
 trigger:
   type: s3_event
+  bucket: visitiq-vins-input
+
+execution:
+  window:
+    type: event
+  backfill_supported: false
+  max_parallelism: 5
+
 source:
   engine: s3
-transform:
-  type: sql
+  tables:
+    - 5x5_universal_person_sorted
+    - consumer_email_sorted_md5
+
+steps:
+  - name: extract
+    type: glue
+  - name: quality_check
+    type: dq
+  - name: transform
+    type: sql
+  - name: deliver
+    type: s3
+
 delivery:
   format: parquet
+  destination: s3://visitiq-vins-output/
+
 governance:
   pii: true
   data_owner: automotive
