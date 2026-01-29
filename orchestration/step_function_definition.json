@@ -1,0 +1,26 @@
+{
+  "Comment": "Unified Pipeline Orchestration",
+  "StartAt": "LoadConfig",
+  "States": {
+    "LoadConfig": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:load-config",
+      "Next": "ValidateConfig"
+    },
+    "ValidateConfig": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:validate-config",
+      "Next": "RunGlueJob"
+    },
+    "RunGlueJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Next": "RecordMetadata"
+    },
+    "RecordMetadata": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:record-metadata",
+      "End": true
+    }
+  }
+}
