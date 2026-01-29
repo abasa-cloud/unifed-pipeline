@@ -1,5 +1,5 @@
 {
-  "Comment": "Unified Pipeline Orchestration",
+  "Comment": "Unified Pipeline Orchestration - Advanced",
   "StartAt": "LoadConfig",
   "States": {
     "LoadConfig": {
@@ -10,11 +10,52 @@
     "ValidateConfig": {
       "Type": "Task",
       "Resource": "arn:aws:lambda:validate-config",
-      "Next": "RunGlueJob"
+      "Next": "ResolveWindow"
     },
-    "RunGlueJob": {
+    "ResolveWindow": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Resource": "arn:aws:lambda:resolve-window",
+      "Next": "FanOutClients"
+    },
+    "FanOutClients": {
+      "Type": "Map",
+      "MaxConcurrency": 10,
+      "Iterator": {
+        "StartAt": "RunGlueExtract",
+        "States": {
+          "RunGlueExtract": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Next": "RunDQ"
+          },
+          "RunDQ": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:run-dq",
+            "Next": "ConditionalEnrich"
+          },
+          "ConditionalEnrich": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.enrich",
+                "BooleanEquals": true,
+                "Next": "RunDbt"
+              }
+            ],
+            "Default": "Deliver"
+          },
+          "RunDbt": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:run-dbt",
+            "Next": "Deliver"
+          },
+          "Deliver": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:deliver-output",
+            "End": true
+          }
+        }
+      },
       "Next": "RecordMetadata"
     },
     "RecordMetadata": {
